@@ -113,12 +113,12 @@ if __name__ == "__main__":
 
     # Example: recommend stocks based on user input
     user_1yr_return = 0.15  # Example 1-Year Return: 15%
-    user_risk_level = 5  # Example Risk Level (0-10)
+    user_risk_level = 'Medium'  # Example Risk Level (High, Medium, Low)
 
-    # Load stock data and features
-    df = pd.concat([add_features(get_stock_data(ticker, period='max'), ticker) for ticker in ticker_list])
+    # # Load stock data and features
+    # df = pd.concat([add_features(get_stock_data(ticker, period='max'), ticker) for ticker in ticker_list])
 
-    # Recommend stocks
-    recommended_stocks = recommend_stocks(user_1yr_return, user_risk_level, df)
-    print("Top 5 recommended stocks based on user input:")
-    print(recommended_stocks)
+    # # Recommend stocks
+    # recommended_stocks = recommend_stocks(user_1yr_return, user_risk_level, df)
+    # print("Top 5 recommended stocks based on user input:")
+    # print(recommended_stocks)
