@@ -22,13 +22,6 @@ def add_features(df, ticker):
     if '1-Year Return' not in df.columns:
         df['1-Year Return'] = df['Close'].pct_change(periods=252)  # 252 trading days in a year
 
-    # # Calculate Risk Level based on Volatility
-    # if 'Risk Level' not in df.columns:
-    #     # Define risk level based on volatility: Low, Medium, High
-    #     df['Risk Level'] = np.where(df['Volatility'] < 0.02, 1,  # Low risk (1)
-    #                                 np.where(df['Volatility'] < 0.05, 2,  # Medium risk (2)
-    #                                          3))  # High risk (3)
-
     # Drop any NaN values that might have been created during feature engineering
     df = df.dropna()
 

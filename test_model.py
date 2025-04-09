@@ -63,7 +63,7 @@ def recommend_stocks(user_1yr_return, user_risk_level, ticker_list, model, scale
 def main():
     # User input (Example: user provides their desired 1-Year Return and Risk Level)
     user_1yr_return = float(input("Enter desired 1-Year Return (e.g., 0.15 for 15%): "))
-    user_risk_level = int(input("Enter desired Risk Level (1 to 10): "))
+    user_risk_level = input("Enter desired Risk Level (High, Medium, Low): ")
 
     # List of stock tickers to choose from
     ticker_list = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'GOLD']
