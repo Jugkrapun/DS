@@ -1,82 +1,96 @@
 import numpy as np
 import pandas as pd
-import joblib
-import tensorflow as tf
-from tensorflow.keras.models import load_model
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import euclidean_distances
+from labeling import label_risk
+from tensorflow.keras.models import load_model
+import joblib
+
+from feature_engineering import add_features
 from data_collection import get_stock_data
 from data_preprocessing import preprocess_data
-from feature_engineering import add_features
 
-def load_model_and_scaler(model_path='models/suitability_model_nn.h5', scaler_path='models/scaler.pkl'):
-    """
-    Load the trained model and the scaler.
-    """
-    model = load_model(model_path)
-    scaler = joblib.load(scaler_path)
-    return model, scaler
+# Load the trained model and scaler
+def load_model_from_file(model_filename='suitability_model_nn.h5'):
+    """Load the trained neural network model."""
+    return load_model(model_filename)
 
-def recommend_stocks(user_1yr_return, user_risk_level, ticker_list, model, scaler):
+def load_scaler_from_file(scaler_filename='scaler.pkl'):
+    """Load the scaler from file."""
+    return joblib.load(scaler_filename)
+
+# Calculate Euclidean Distance
+def calculate_distance(user_input, stock_data, scaler):
     """
-    Recommend the top 5 stocks based on user input and the trained model.
+    Calculate Euclidean distance between user input and stock data
+    user_input: [desired 1-Year Return, desired Risk Level]
+    stock_data: DataFrame with stock features (1-Year Return, Risk Level)
+    scaler: fitted scaler used to normalize the data
     """
+    # Normalize the user input
+    user_data_scaled = scaler.transform([user_input])
+
+    # Normalize the stock data
+    stock_data_scaled = scaler.transform(stock_data[['1-Year Return', 'Risk Level']])
+
+    # Calculate Euclidean distances between the user input and all stock data
+    distances = euclidean_distances(user_data_scaled, stock_data_scaled)
+    return distances[0]
+
+# Recommend stocks based on user input
+def recommend_stocks(user_1yr_return, user_risk_level, df, model, scaler):
+    """
+    Recommend the top 5 stocks based on user input and predicted suitability score.
+    """
+    # Prepare user input
+    user_input = np.array([[user_1yr_return, user_risk_level]])
+
+    # Calculate distances from user input to each stock
+    df['Distance'] = calculate_distance(user_input[0], df, scaler)
+
+    # Sort by distance and get top 5 most suitable stocks
+    recommended_stocks = df.sort_values(by='Distance').head(5)
+
+    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Level', 'Volatility', 'Distance']]
+
+# Main function for using the model
+def main():
+    # Load the trained model and scaler
+    model = load_model_from_file('suitability_model_nn.h5')
+    scaler = load_scaler_from_file('scaler.pkl')
+
+    # List of stock tickers
+    ticker_list = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'GOLD']
+
+    # Load stock data and create features
     all_data = []
-
     for ticker in ticker_list:
         try:
-            # Fetch stock data for each ticker and add features
+            print(f"Fetching data for {ticker}...")
             data = get_stock_data(ticker, period='max')
             data = preprocess_data(data)
             data = add_features(data, ticker)
+            data = label_risk(data)
             all_data.append(data)
         except Exception as e:
             print(f"[Warning] Skipping {ticker}: {e}")
-            continue
 
-    if not all_data:
-        print("No valid stock data available for recommendation.")
-        return None
-
-    # Concatenate all stock data into a single DataFrame
+    # Concatenate all data into a single dataframe
     df = pd.concat(all_data)
     df = df.dropna()
 
-    # Extract features needed for prediction
-    X = df[['1-Year Return', 'Risk Level']]
+    # Ensure the dataframe has only 1 row per stock (if it has more, aggregate or select last data)
+    df = df.groupby('Ticker').last().reset_index()
 
-    # Normalize the features with the scaler
-    X_scaled = scaler.transform(X)
-
-    # Predict the suitability score using the trained model
-    predicted_scores = model.predict(X_scaled)
-
-    # Add predicted scores to the dataframe
-    df['Predicted Suitability Score'] = predicted_scores
-
-    # Sort by predicted suitability score (higher score is better)
-    recommended_stocks = df[['Ticker', '1-Year Return', 'Risk Level', 'Predicted Suitability Score']]
-    recommended_stocks = recommended_stocks.sort_values(by='Predicted Suitability Score', ascending=False).head(5)
-
-    return recommended_stocks
-
-def main():
-    # User input (Example: user provides their desired 1-Year Return and Risk Level)
+    # Get user input for desired 1-Year Return and Risk Level
     user_1yr_return = float(input("Enter desired 1-Year Return (e.g., 0.15 for 15%): "))
-    user_risk_level = input("Enter desired Risk Level (High, Medium, Low): ")
+    user_risk_level = int(input("Enter desired Risk Level (1 to 10): "))
 
-    # List of stock tickers to choose from
-    ticker_list = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'GOLD']
+    # Recommend stocks based on user input
+    recommended_stocks = recommend_stocks(user_1yr_return, user_risk_level, df, model, scaler)
 
-    # Load the trained model and scaler
-    model, scaler = load_model_and_scaler()
-
-    # Recommend the top 5 stocks based on user input
-    recommended_stocks = recommend_stocks(user_1yr_return, user_risk_level, ticker_list, model, scaler)
-
-    if recommended_stocks is not None:
-        print("\nTop 5 recommended stocks based on your input:")
-        print(recommended_stocks)
+    print("\nTop 5 recommended stocks based on your input:")
+    print(recommended_stocks)
 
 if __name__ == "__main__":
     main()
