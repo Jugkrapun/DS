@@ -23,15 +23,15 @@ def load_scaler_from_file(scaler_filename='scaler.pkl'):
 def calculate_distance(user_input, stock_data, scaler):
     """
     Calculate Euclidean distance between user input and stock data
-    user_input: [desired 1-Year Return, desired Risk Level]
-    stock_data: DataFrame with stock features (1-Year Return, Risk Level)
+    user_input: [desired 1-Year Return, desired Risk Score]
+    stock_data: DataFrame with stock features (1-Year Return, Risk Score)
     scaler: fitted scaler used to normalize the data
     """
     # Normalize the user input
     user_data_scaled = scaler.transform([user_input])
 
     # Normalize the stock data
-    stock_data_scaled = scaler.transform(stock_data[['1-Year Return', 'Risk Level']])
+    stock_data_scaled = scaler.transform(stock_data[['1-Year Return', 'Risk Score']])
 
     # Calculate Euclidean distances between the user input and all stock data
     distances = euclidean_distances(user_data_scaled, stock_data_scaled)
@@ -51,7 +51,7 @@ def recommend_stocks(user_1yr_return, user_risk_level, df, model, scaler):
     # Sort by distance and get top 5 most suitable stocks
     recommended_stocks = df.sort_values(by='Distance').head(5)
 
-    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Level', 'Volatility', 'Distance']]
+    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Score', 'Volatility', 'Distance']]
 
 # Main function for using the model
 def main():
@@ -82,9 +82,9 @@ def main():
     # Ensure the dataframe has only 1 row per stock (if it has more, aggregate or select last data)
     df = df.groupby('Ticker').last().reset_index()
 
-    # Get user input for desired 1-Year Return and Risk Level
+    # Get user input for desired 1-Year Return and Risk Score
     user_1yr_return = float(input("Enter desired 1-Year Return (e.g., 0.15 for 15%): "))
-    user_risk_level = int(input("Enter desired Risk Level (1 to 10): "))
+    user_risk_level = int(input("Enter desired Risk Score (1 to 10): "))
 
     # Recommend stocks based on user input
     recommended_stocks = recommend_stocks(user_1yr_return, user_risk_level, df, model, scaler)

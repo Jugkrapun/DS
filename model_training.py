@@ -34,7 +34,7 @@ def load_scaler(filename='scaler.pkl'):
 def create_features(ticker_list):
     """
     Create features for the given list of stock tickers.
-    This will return a dataframe with 1-Year Return, Volatility, and Risk Level for each stock.
+    This will return a dataframe with 1-Year Return, Volatility, and Risk Score for each stock.
     The dataframe will have only 6 rows, one for each ticker.
     """
     all_data = []
@@ -45,7 +45,7 @@ def create_features(ticker_list):
             data = get_stock_data(ticker, period='max')  # Fetch stock data
             data = preprocess_data(data)  # Preprocess the data
             data = add_features(data, ticker)  # Add features like '1-Year Return', 'Volatility'
-            data = label_risk(data)  # Add 'Risk Level'
+            # data = label_risk(data)  # Add 'Risk Score'
             all_data.append(data)
         except Exception as e:
             print(f"[Warning] Skipping {ticker}: {e}")
@@ -59,7 +59,7 @@ def create_features(ticker_list):
     df = pd.concat(all_data)
 
     # Ensure we only keep the necessary columns
-    df = df[['Ticker', '1-Year Return', 'Risk Level', 'Volatility']]
+    df = df[['Ticker', '1-Year Return', 'Risk Score', 'Volatility']]
 
     # Group by 'Ticker' and keep only one row for each stock (either the last or mean)
     # Use 'last' to get the most recent row for each ticker, or 'mean' for averaging
@@ -83,18 +83,18 @@ def recommend_stocks(user_1yr_return, user_risk_level, stock_data):
     Recommend the top 5 stocks based on Euclidean distance between user input and stock features.
     """
     # Extract the features we need
-    stock_data = stock_data[['Ticker', '1-Year Return', 'Risk Level']].dropna()
+    stock_data = stock_data[['Ticker', '1-Year Return', 'Risk Score']].dropna()
 
     # Normalize the features
     scaler = StandardScaler()
-    stock_data[['1-Year Return', 'Risk Level']] = scaler.fit_transform(stock_data[['1-Year Return', 'Risk Level']])
+    stock_data[['1-Year Return', 'Risk Score']] = scaler.fit_transform(stock_data[['1-Year Return', 'Risk Score']])
 
     # Normalize the user input
     user_data = np.array([[user_1yr_return, user_risk_level]])
     user_data = scaler.transform(user_data)
 
     # Calculate Euclidean distances between the user input and all stocks
-    distances = euclidean_distances(user_data, stock_data[['1-Year Return', 'Risk Level']])
+    distances = euclidean_distances(user_data, stock_data[['1-Year Return', 'Risk Score']])
 
     # Add the distance to the stock dataframe
     stock_data['Distance'] = distances[0]
@@ -102,19 +102,19 @@ def recommend_stocks(user_1yr_return, user_risk_level, stock_data):
     # Sort by distance and get the top 5 stocks
     recommended_stocks = stock_data.sort_values(by='Distance').head(5)
 
-    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Level', 'Distance']]
+    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Score', 'Distance']]
 
 def train_model(ticker_list):
     """
-    Train the neural network model to predict the suitability score based on 1-Year Return and Risk Level.
+    Train the neural network model to predict the suitability score based on 1-Year Return and Risk Score.
     """
     # Create features
     df = create_features(ticker_list)
     if df is None:
         return
 
-    # Only use '1-Year Return' and 'Risk Level' as input features
-    features = ['1-Year Return', 'Risk Level']
+    # Only use '1-Year Return' and 'Risk Score' as input features
+    features = ['1-Year Return', 'Risk Score']
     
     X = df[features]
     
@@ -169,7 +169,7 @@ if __name__ == "__main__":
 
     # # Example: recommend stocks based on user input
     # user_1yr_return = float(input("Enter desired 1-Year Return (e.g., 0.15 for 15%): "))
-    # user_risk_level = int(input("Enter desired Risk Level (1 to 10): "))
+    # user_risk_level = int(input("Enter desired Risk Score (1 to 10): "))
 
     # # Load stock data
     # df = create_features(ticker_list)
@@ -185,7 +185,7 @@ if __name__ == "__main__":
 #     # Train the model first
 #     train_model(ticker_list)
 
-    # # Example: user provides their desired 1-Year Return and Risk Level
+    # # Example: user provides their desired 1-Year Return and Risk Score
 
     # # Load stock data and features
     # df = pd.concat([add_features(get_stock_data(ticker, period='max'), ticker) for ticker in ticker_list])
