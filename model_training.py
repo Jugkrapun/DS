@@ -163,7 +163,14 @@ def train_model(ticker_list):
     print("Neural network model training completed and saved as 'suitability_model_nn.h5'.")
 
 if __name__ == "__main__":
-    ticker_list = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'GOLD']
+    ticker_list = [
+    'AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'META', 'NVDA', 'V', 'NFLX', 'DIS',
+    'INTC', 'BA', 'JPM', 'WMT', 'PG', 'KO', 'IBM', 'PEP', 'CVX', 'XOM', 
+    'SPY', 'VTI', 'QQQ', 'IWM', 'GLD', 'XLF', 'XLE', 'VOO', 'EFA', 'VWO',
+    '^GSPC', '^DJI', '^IXIC', '^RUT', '^FTSE', '^N225', '^STOXX50E', '^HSI', '^AORD',
+    'GC=F', 'CL=F', 'SI=F', 'NG=F', 'ZC=F', 'ZW=F', 'KC=F', 'C=F', 'PL=F', 'PA=F'
+]
+
     # Train the model first
     train_model(ticker_list)
 
