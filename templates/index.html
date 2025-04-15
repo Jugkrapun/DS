@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Stock Risk Analyzer | Skytells Research</title>
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <style>
+    <!-- <style>
         :root {
             --primary-color: #2563eb;
             --secondary-color: #1e40af;
@@ -286,7 +286,7 @@
             border-radius: var(--border-radius);
             height: 400px;
         }
-    </style>
+    </style> -->
 </head>
 <body>
     <div class="container">
@@ -306,7 +306,8 @@
             <form id="analyzerForm">
                 <div class="form-group">
                     <div class="input-group">
-                        <input type="text" id="ticker" name="ticker" placeholder="Enter stock ticker (e.g., AAPL)" required>
+                        <input type="text" id="return" name="return" placeholder="Enter desired 1-Year Return (e.g., 0.15 for 15%):" required>
+                        <input type="text" id="risk" name="risk" placeholder="Enter desired Risk Score (1 to 10):" required>
                         <button type="submit">
                             <i class="fas fa-search"></i> Analyze
                         </button>

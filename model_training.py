@@ -81,9 +81,10 @@ def create_features(ticker_list):
 def recommend_stocks(user_1yr_return, user_risk_level, stock_data):
     """
     Recommend the top 5 stocks based on Euclidean distance between user input and stock features.
+    Also returns the Suitability Score based on the Euclidean distance.
     """
     # Extract the features we need
-    stock_data = stock_data[['Ticker', '1-Year Return', 'Risk Score']].dropna()
+    stock_data = stock_data[['Ticker', '1-Year Return', 'Risk Score', 'Volatility']].dropna()
 
     # Normalize the features
     scaler = StandardScaler()
@@ -99,10 +100,17 @@ def recommend_stocks(user_1yr_return, user_risk_level, stock_data):
     # Add the distance to the stock dataframe
     stock_data['Distance'] = distances[0]
 
-    # Sort by distance and get the top 5 stocks
-    recommended_stocks = stock_data.sort_values(by='Distance').head(5)
+    # Calculate Suitability Score where distance = 0 gives a score of 10, and higher distances result in lower scores
+    min_distance = stock_data['Distance'].min()
+    max_distance = stock_data['Distance'].max()
 
-    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Score', 'Distance']]
+    # Normalize the distances to calculate Suitability Score (0 to 10)
+    stock_data['Suitability Score'] = 10 * (1 - (stock_data['Distance'] / max_distance))
+
+    # Sort by Suitability Score and get the top 5 most suitable stocks
+    recommended_stocks = stock_data.sort_values(by='Suitability Score', ascending=False).head(5)
+
+    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Score', 'Volatility', 'Suitability Score', 'Distance']]
 
 def train_model(ticker_list):
     """

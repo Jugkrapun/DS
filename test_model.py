@@ -48,10 +48,17 @@ def recommend_stocks(user_1yr_return, user_risk_level, df, model, scaler):
     # Calculate distances from user input to each stock
     df['Distance'] = calculate_distance(user_input[0], df, scaler)
 
-    # Sort by distance and get top 5 most suitable stocks
-    recommended_stocks = df.sort_values(by='Distance').head(5)
+    # Calculate Suitability Score where distance = 0 gives a score of 10, and higher distances result in lower scores
+    min_distance = df['Distance'].min()
+    max_distance = df['Distance'].max()
 
-    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Score', 'Volatility', 'Distance']]
+    # Normalize the distances to calculate Suitability Score (0 to 10)
+    df['Suitability Score'] = 10 * (1 - (df['Distance'] / max_distance))
+
+    # Sort by Suitability Score and get the top 5 most suitable stocks
+    recommended_stocks = df.sort_values(by='Suitability Score', ascending=False).head(5)
+
+    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Score', 'Volatility', 'Suitability Score', 'Distance']]
 
 # Main function for using the model
 def main():
