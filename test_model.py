@@ -2,7 +2,7 @@ import numpy as np
 import pandas as pd
 from sklearn.preprocessing import StandardScaler
 from sklearn.metrics.pairwise import euclidean_distances
-from labeling import label_risk
+# from labeling import label_risk
 from tensorflow.keras.models import load_model
 import joblib
 
@@ -83,7 +83,7 @@ def main():
             data = get_stock_data(ticker, period='max')
             data = preprocess_data(data)
             data = add_features(data, ticker)
-            data = label_risk(data)
+            # data = label_risk(data)
             all_data.append(data)
         except Exception as e:
             print(f"[Warning] Skipping {ticker}: {e}")

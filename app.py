@@ -8,7 +8,6 @@ from sklearn.metrics.pairwise import euclidean_distances
 from data_collection import get_stock_data
 from data_preprocessing import preprocess_data
 from feature_engineering import add_features
-from labeling import label_risk
 from save_load_model import load_model_from_file
 from test_model import calculate_distance, load_scaler_from_file, recommend_stocks  # Assuming this provides the risk labeling logic
 
@@ -50,8 +49,6 @@ def analyze():
                 data = preprocess_data(data)
                 # Add features to the data
                 data = add_features(data, ticker)
-                # Label the risk for the stock
-                data = label_risk(data)
                 all_data.append(data)
             except Exception as e:
                 print(f"[Warning] Skipping {ticker}: {e}")

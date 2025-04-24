@@ -1,6 +1,5 @@
 import numpy as np
 import pandas as pd
-from labeling import label_risk
 import tensorflow as tf
 from tensorflow.keras.models import Sequential
 from tensorflow.keras.layers import Dense, Dropout, Input
@@ -45,7 +44,6 @@ def create_features(ticker_list):
             data = get_stock_data(ticker, period='max')  # Fetch stock data
             data = preprocess_data(data)  # Preprocess the data
             data = add_features(data, ticker)  # Add features like '1-Year Return', 'Volatility'
-            # data = label_risk(data)  # Add 'Risk Score'
             all_data.append(data)
         except Exception as e:
             print(f"[Warning] Skipping {ticker}: {e}")
@@ -78,40 +76,6 @@ def create_features(ticker_list):
 
     return df
 
-def recommend_stocks(user_1yr_return, user_risk_level, stock_data):
-    """
-    Recommend the top 5 stocks based on Euclidean distance between user input and stock features.
-    Also returns the Suitability Score based on the Euclidean distance.
-    """
-    # Extract the features we need
-    stock_data = stock_data[['Ticker', '1-Year Return', 'Risk Score', 'Volatility']].dropna()
-
-    # Normalize the features
-    scaler = StandardScaler()
-    stock_data[['1-Year Return', 'Risk Score']] = scaler.fit_transform(stock_data[['1-Year Return', 'Risk Score']])
-
-    # Normalize the user input
-    user_data = np.array([[user_1yr_return, user_risk_level]])
-    user_data = scaler.transform(user_data)
-
-    # Calculate Euclidean distances between the user input and all stocks
-    distances = euclidean_distances(user_data, stock_data[['1-Year Return', 'Risk Score']])
-
-    # Add the distance to the stock dataframe
-    stock_data['Distance'] = distances[0]
-
-    # Calculate Suitability Score where distance = 0 gives a score of 10, and higher distances result in lower scores
-    min_distance = stock_data['Distance'].min()
-    max_distance = stock_data['Distance'].max()
-
-    # Normalize the distances to calculate Suitability Score (0 to 10)
-    stock_data['Suitability Score'] = 10 * (1 - (stock_data['Distance'] / max_distance))
-
-    # Sort by Suitability Score and get the top 5 most suitable stocks
-    recommended_stocks = stock_data.sort_values(by='Suitability Score', ascending=False).head(5)
-
-    return recommended_stocks[['Ticker', '1-Year Return', 'Risk Score', 'Volatility', 'Suitability Score', 'Distance']]
-
 def train_model(ticker_list):
     """
     Train the neural network model to predict the suitability score based on 1-Year Return and Risk Score.
@@ -121,9 +85,9 @@ def train_model(ticker_list):
     if df is None:
         return
 
-    # Only use '1-Year Return' and 'Risk Score' as input features
+    #Use '1-Year Return' and 'Risk Score' as input features
     features = ['1-Year Return', 'Risk Score']
-    
+
     X = df[features]
     
     # We will use the same 'Suitability Score' heuristic for simplicity
@@ -179,33 +143,5 @@ if __name__ == "__main__":
     'GC=F', 'CL=F', 'SI=F', 'NG=F', 'ZC=F', 'ZW=F', 'KC=F', 'C=F', 'PL=F', 'PA=F'
 ]
 
-    # Train the model first
+    # Train the model
     train_model(ticker_list)
-
-    # # Example: recommend stocks based on user input
-    # user_1yr_return = float(input("Enter desired 1-Year Return (e.g., 0.15 for 15%): "))
-    # user_risk_level = int(input("Enter desired Risk Score (1 to 10): "))
-
-    # # Load stock data
-    # df = create_features(ticker_list)
-
-    # # Recommend stocks
-    # recommended_stocks = recommend_stocks(user_1yr_return, user_risk_level, df)
-    # print("Top 5 recommended stocks based on user input:")
-    # print(recommended_stocks)
-
-
-# if __name__ == "__main__":
-#     ticker_list = ['AAPL', 'MSFT', 'GOOGL', 'AMZN', 'TSLA', 'GOLD']
-#     # Train the model first
-#     train_model(ticker_list)
-
-    # # Example: user provides their desired 1-Year Return and Risk Score
-
-    # # Load stock data and features
-    # df = pd.concat([add_features(get_stock_data(ticker, period='max'), ticker) for ticker in ticker_list])
-
-    # # Recommend stocks
-    # recommended_stocks = recommend_stocks(user_1yr_return, user_risk_level, df)
-    # print("Top 5 recommended stocks based on user input:")
-    # print(recommended_stocks)
